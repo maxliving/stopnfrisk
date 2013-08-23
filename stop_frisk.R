@@ -19,3 +19,6 @@ setwd("~/Projects/stopnfrisk")
 data <- read.csv("data/SQF_2012.csv")
 dim(data)
 str(data)
+
+attach(data)
+
