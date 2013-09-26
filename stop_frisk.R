@@ -68,11 +68,6 @@ ggsave("output/contourmap.png")
 map <- map + geom_point(size=0.3) + geom_density2d()
 ggsave("output/contourmap_wpoints.png")
 
-map <- ggplot(dfrm,aes(xcoord,ycoord))
-map + geom_density2d()
-ggsave("output/contourmap.png")
-map <- map + geom_point(size=0.3) + geom_density2d()
-ggsave("output/contourmap_wpoints.png")
 
 map <- ggplot(dfrm,aes(xcoord,ycoord))
 map <- map + stat_density2d(aes(fill = ..level..), geom="polygon")
@@ -85,3 +80,13 @@ pctmap <- ggplot(precinctmap.df,aes(long,lat,group=group)) + geom_polygon() + ge
 # Bring in the polygon shapefile of NYC police precincts and plot the stops on that map:
 pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,group=group)) + geom_path(size=.3)
 pctmapplot + geom_point(data=stops,aes(group=NULL),size=.1,color="#D55E00")
+
+# precincts + density:
+pctmapplot + geom_density2d(data=stops,aes(group=NULL,fill = ..level..))
+pctmap_density <- ggplot(stops, aes(xcoord,ycoord)) +
+    stat_density2d(aes(group=NULL,fill= ..level..),geom="polygon") +
+    scale_fill_gradient2(space="rgb",low="white",high="red")
+pctmap_density <- pctmap_density + geom_path(data=precinctmap.df,aes(x=long,y=lat,group=group))
+pctmap_density
+
+
