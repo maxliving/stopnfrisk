@@ -44,7 +44,7 @@ table(dfrm$frisked,dfrm$black)
 
 ## Mapping/exploration
 ## faster if we don't map the shapefile, just the points. Gives you a decent sense of what the dfrm look like:
-
+ 
 ## Overall map of all entries in the dataset
 ggplot(dfrm,aes(xcoord, ycoord, color="##D55E00")) + geom_point(size=.075) 
 ## Map stops, colored by frisks vs. just stops
@@ -80,9 +80,12 @@ pctmap <- ggplot(precinctmap.df,aes(long,lat,group=group)) + geom_polygon() + ge
 # Bring in the polygon shapefile of NYC police precincts and plot the stops on that map:
 pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,group=group)) + geom_path(size=.3)
 pctmapplot + geom_point(data=stops,aes(group=NULL),size=.1,color="#D55E00")
-
-# precincts + density:
+ggsave(file="output/precincts_points.pdf")
 pctmapplot + geom_density2d(data=stops,aes(group=NULL,fill = ..level..))
+
+# precincts + stop dots
+pctmap.stops <- ggplot(stops, aes(xcoord,ycoord)) + geom_point(
+# precincts + density:
 pctmap_density <- ggplot(stops, aes(xcoord,ycoord)) +
     stat_density2d(aes(group=NULL,fill= ..level..),geom="polygon") +
     scale_fill_gradient2(space="rgb",low="white",high="red")
