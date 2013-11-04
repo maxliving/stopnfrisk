@@ -29,12 +29,14 @@ stops <- fortify(dfrm)
 stops$long <- stops$xcoord
 stops$lat <- stops$ycoord
 
+## Recode White Hisp as Black Hisp; we are going to combine this into Hisp.
+stops$race[stops$race == 3] <- 2
 stops$race <- factor(stops$race, 
     levels=c(1:6), 
-    labels=c("Black","Black Hisp","White Hisp","White","Asian","AmInd"))
+    labels=c("Black","Hispanic","","White","Asian","AmInd"))
 stops$frisked.f <- factor(stops$frisked,levels=c(0,1))
 stops$arrest.f <- factor(stops$arstmade,levels=c(0,1))
-stops$black <- stops$race=="Black" | stops$race=="Black Hisp"
+stops$black <- stops$race=="Black"
 
 ## Summary stats:
 tapply(stops$frisked, stops$race, mean)
@@ -76,19 +78,37 @@ table(stops$frisked,stops$black)
 
 ## + geom_polygon(fill="white",color="grey50")
 
+
+## Getting nice-looking maps requires changing a bunch of ggplot2 defaults
+theme.opts <- theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank(),
+          legend.title=element_blank())
+
 # Bring in the polygon shapefile of NYC police precincts and plot the stops on that map:
 pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,group=group)) + geom_path(size=.3)
-pctmapplot + geom_point(data=stops,aes(group=NULL),size=.1,color="#D55E00")
+pctmapplot + geom_point(data=stops,aes(group=NULL),size=.1,color="#D55E00") + theme.opts
 ggsave(file="output/precincts_points.pdf")
-pctmapplot + geom_density2d(data=stops,aes(group=NULL,fill = ..level..))
+pctmapplot + geom_density2d(data=stops,aes(group=NULL,fill = ..level..)) + theme.opts
+ggsave("output/precincts_density.jpg")
 
+pcts.stops <- ggplot(stops,aes(xcoord,ycoord)) + geom_path(data=precinctmap.df,aes(x=long,y=lat,group=group),size=0.15)
 # precincts + stop dots by arrest vs. non-arrest
-pctmap.stops <- ggplot(stops,aes(xcoord,ycoord)) +
-    geom_point(size=0.15,aes(color="D55E00"),subset=.(arstmade==0)) +
-    geom_point(size=0.15,color="green",subset=.(arstmade==1))
+pcts.stops +
+    geom_point(size=0.25,aes(color="D55E00"),subset=.(arstmade==0)) +
+    geom_point(size=0.25,color="green",subset=.(arstmade==1)) + theme.opts
+ggsave("output/arrests.pdf")
 
-pctmap.stops + geom_path(data=precinctmap.df,aes(x=long,y=lat,group=group,size=0.3))
-
+pcts.stops +
+    geom_point(size=0.15,aes(color=race),subset=.(race!="AmInd")) +
+    guides(color = guide_legend(override.aes = list(size=3))) + theme.opts
+ggsave("output/stops_byrace.pdf")
 
 # precincts + density:
 pctmap_density <- ggplot(stops, aes(xcoord,ycoord)) +
@@ -96,5 +116,3 @@ pctmap_density <- ggplot(stops, aes(xcoord,ycoord)) +
     scale_fill_gradient2(space="rgb",low="white",high="red")
 pctmap_density <- pctmap_density + geom_path(data=precinctmap.df,aes(x=long,y=lat,group=group))
 pctmap_density
-
-
