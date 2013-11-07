@@ -102,8 +102,9 @@ pcts.stops <- ggplot(stops,aes(xcoord,ycoord)) + geom_path(data=precinctmap.df,a
 # precincts + stop dots by arrest vs. non-arrest
 pcts.stops +
     geom_point(size=0.25,aes(color="D55E00"),subset=.(arstmade==0)) +
-    geom_point(size=0.25,color="green",subset=.(arstmade==1)) + theme.opts
+    geom_point(size=0.25,color="green",subset=.(arstmade==1)) + theme.opts + theme(legend.position="none")
 ggsave("output/arrests.pdf")
+ggsave("output/arrests.png")
 
 pcts.stops +
     geom_point(size=0.15,aes(color=race),subset=.(race!="AmInd")) +
