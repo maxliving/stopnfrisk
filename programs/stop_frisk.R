@@ -110,6 +110,7 @@ pcts.stops +
     geom_point(size=0.15,aes(color=race),subset=.(race!="AmInd")) +
     guides(color = guide_legend(override.aes = list(size=3))) + theme.opts
 ggsave("output/stops_byrace.pdf")
+ggsave("output/stops_byrace.png")
 
 # precincts + density:
 pctmap_density <- ggplot(stops, aes(xcoord,ycoord)) +
@@ -117,3 +118,5 @@ pctmap_density <- ggplot(stops, aes(xcoord,ycoord)) +
     scale_fill_gradient2(space="rgb",low="white",high="red")
 pctmap_density <- pctmap_density + geom_path(data=precinctmap.df,aes(x=long,y=lat,group=group))
 pctmap_density
+ggsave("output/heatmap.pdf")
+ggsave("output/heatmap.png")

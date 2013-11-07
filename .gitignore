@@ -1,3 +1,4 @@
+.DS_Store
 data/SQF_2012.csv
 data/
 SQF_Codebook.pdf
@@ -5,6 +6,5 @@ SQF_Codebook.pdf
 .Rdata
 .Rapp.history
 .Rout
-.DS_Store
 .R~
 output/
