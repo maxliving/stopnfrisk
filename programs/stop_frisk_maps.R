@@ -1,6 +1,5 @@
-# stop_frisk.R
+# stop_frisk_maps.R
 # Created 8/20/2013 by Max Livingston
-# Last Modified: 8/20/2013
 # Some basic stats/plotting of NYC Stop and Frisk dfrm
 # dfrm obtained from the ACLU: http://www.nyclu.org/content/stop-and-frisk-dfrm
 
@@ -36,6 +35,7 @@ stops$race <- factor(stops$race,
     labels=c("Black","Hispanic","","White","Asian","AmInd"))
 stops$frisked.f <- factor(stops$frisked,levels=c(0,1))
 stops$arrest.f <- factor(stops$arstmade,levels=c(0,1))
+stops$arrest.f.rev <- factor(stops$arstmade,levels = rev(levels(factor(stops$arstmade))))
 stops$black <- stops$race=="Black"
 
 ## Summary stats:
@@ -89,8 +89,7 @@ theme.opts <- theme(axis.line=element_blank(),axis.text.x=element_blank(),
           panel.border=element_blank(),
           panel.grid.major=element_blank(),
           panel.grid.minor=element_blank(),
-          plot.background=element_blank(),
-          legend.title=element_blank())
+          plot.background=element_blank() ,legend.title=element_blank())
 
 # Bring in the polygon shapefile of NYC police precincts and plot the stops on that map:
 pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,group=group)) + geom_path(size=.3)
@@ -101,9 +100,18 @@ ggsave("output/precincts_density.jpg")
 
 pcts.stops <- ggplot(stops,aes(xcoord,ycoord)) + geom_path(data=precinctmap.df,aes(x=long,y=lat,group=group),size=0.15)
 # precincts + stop dots by arrest vs. non-arrest
+
+arrests.map <- ggplot(stops,aes(x=xcoord,y=ycoord,color=arrest.f.rev)) + geom_point(size=0.15)
+## arrests.map
+
+## pcts.stops + geom_point(size=0.10,aes(color=arrest.f)) +
+##     scale_color_discrete() +
+##     guides(color = guide_legend(override.aes = list(size=3)))
+
 pcts.stops +
-    geom_point(size=0.25,aes(color="D55E00"),subset=.(arstmade==0)) +
-    geom_point(size=0.25,color="green",subset=.(arstmade==1)) + theme.opts + theme(legend.position="none")
+    geom_point(size=0.25,color="D55E00",subset=.(arstmade==0)) +
+    geom_point(size=0.25,color="green",subset=.(arstmade==1)) +
+    theme.opts
 ggsave("output/arrests.pdf")
 ggsave("output/arrests.png")
 
