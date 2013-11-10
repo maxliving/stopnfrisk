@@ -42,6 +42,7 @@ stops$black <- stops$race=="Black"
 tapply(stops$frisked, stops$race, mean)
 tapply(stops$frisked, stops$black, mean)
 table(stops$frisked,stops$black)
+arrest.race.tbl <- table(stops$arstmade,stops$race)
 
 ## Mapping/exploration
 ## I read that it's faster if we don't map the shapefile, just the points. Gives you a decent sense of what the dfrm look like. However, I'm commenting this out now as I move away from exploration and more toward making the actual maps.
