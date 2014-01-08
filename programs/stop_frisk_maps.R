@@ -17,11 +17,32 @@ setwd("~/Projects/stopnfrisk")
 dfrm <- read.csv("data/SQF_2012.csv")
 
 ### Set up a map dataframe that ggplot can use (see https://github.com/hadley/ggplot2/wiki/plotting-polygon-shapefiles)
-precinctmap <- readOGR("data/nyc_precinctmap","nypp")
-precinctmap@data$id <- rownames(precinctmap@data)
+##precinctmap <- readOGR("data/nyc_precinctmap","nypp")
+precinctmap <- readShapePoly("data/nyc_precinctmap/nypp")
+
+pdf("output/precincts_plain.pdf")
+plot(precinctmap)
+invisible(text(getSpPPolygonsLabptSlots(precinctmap), labels=as.character(precinctmap$Precinct), cex=0.4))
+dev.off()
+
+## Create precinct-level aggregates and merge them with the precinct map data
+stats.by.pct <- aggregate(cbind(arstmade,pistol) ~ pct, data=dfrm, sum)
+## Count of obs in each pct:
+freq <- as.matrix(table(dfrm$pct)) 
+stats.by.pct <- cbind(stats.by.pct, freq)
+
+
+
 ## Normally I use fortify(precinctmap,region="id") but I got a weird error message when I did that, and the whole process worked when I took it out. Should look into that at some point.
+precinctmap@data$id <- rownames(precinctmap@data)
 precinctmap.points <- fortify(precinctmap)
 precinctmap.df <- join(precinctmap.points,precinctmap@data,by="id")
+
+
+precinctmap.df <- merge(precinctmap.df,stats.by.pct, by.x="Precinct", by.y="pct", all.x=T, a..ly=F)
+
+## Get the midpoint of lat and lon for each precinct, to be used for labeling
+cnames <- aggregate(cbind(long, lat) ~ Precinct, data=precinctmap.df, FUN=function(x) mean(range(x)))
 
 ## Now that we've readied the precinctmap polygons, we need to prepare the points (from the csv)
 stops <- fortify(dfrm)
@@ -37,6 +58,9 @@ stops$frisked.f <- factor(stops$frisked,levels=c(0,1))
 stops$arrest.f <- factor(stops$arstmade,levels=c(0,1))
 stops$arrest.f.rev <- factor(stops$arstmade,levels = rev(levels(factor(stops$arstmade))))
 stops$black <- stops$race=="Black"
+
+stops$weapon <- rowSums(stops[,c("contrabn","pistol","riflshot","asltweap","knifcuti","machgun","othrweap")]) != 0
+
 
 ## Summary stats:
 tapply(stops$frisked, stops$race, mean)
@@ -109,7 +133,7 @@ arrests.map <- ggplot(stops,aes(x=xcoord,y=ycoord,color=arrest.f.rev)) + geom_po
 ##     guides(color = guide_legend(override.aes = list(size=3)))
 
 pcts.stops +
-    geom_point(size=0.25,color="D55E00",subset=.(arstmade==0)) +
+    geom_point(size=0.25,color="#D55E00",subset=.(arstmade==0)) +
     geom_point(size=0.25,color="green",subset=.(arstmade==1)) +
     theme.opts
 ggsave("output/arrests.pdf")
@@ -121,6 +145,12 @@ pcts.stops +
 ggsave("output/stops_byrace.pdf")
 ggsave("output/stops_byrace.png")
 
+pcts.stops +
+    geom_point(size=0.15,aes(color=weapon),subset=.(frisked==1 | searched==1)) +
+    guides(color = guide_legend(override.aes = list(size=3))) + theme.opts
+ggsave("output/stops_weapons.pdf")
+ggsave("output/stops_weapons.png")
+
 # precincts + density:
 pctmap_density <- ggplot(stops, aes(xcoord,ycoord)) +
     stat_density2d(aes(group=NULL,fill= ..level..),geom="polygon") +
@@ -129,3 +159,9 @@ pctmap_density <- pctmap_density + geom_path(data=precinctmap.df,aes(x=long,y=la
 pctmap_density
 ggsave("output/heatmap.pdf")
 ggsave("output/heatmap.png")
+
+pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,fill=arstmade)) + geom_polygon(aes(group=group)) +
+    scale_fill_gradient(low="grey",high="red")
+pctmapplot + geom_text(data=cnames, aes(long, lat, label = Precinct), size=2)
+ggsave("output/choropleth1.pdf")
+ggsave("output/choropleth1.png")
