@@ -7,4 +7,6 @@ SQF_Codebook.pdf
 .Rapp.history
 .Rout
 .R~
+*.jpg
+*.png
 output/
