@@ -7,6 +7,7 @@ SQF_Codebook.pdf
 .Rapp.history
 .Rout
 .R~
-*.jpg
-*.png
+.jpg
+.png
 output/
+programs/stop_frisk_sandbox.R

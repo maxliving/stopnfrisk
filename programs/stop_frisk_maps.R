@@ -17,8 +17,8 @@ setwd("~/Projects/stopnfrisk")
 dfrm <- read.csv("data/SQF_2012.csv")
 
 ### Set up a map dataframe that ggplot can use (see https://github.com/hadley/ggplot2/wiki/plotting-polygon-shapefiles)
-##precinctmap <- readOGR("data/nyc_precinctmap","nypp")
-precinctmap <- readShapePoly("data/nyc_precinctmap/nypp")
+precinctmap <- readOGR("data/nyc_precinctmap","nypp")
+##precinctmap <- readShapePoly("data/nyc_precinctmap/nypp")
 
 pdf("output/precincts_plain.pdf")
 plot(precinctmap)
@@ -30,14 +30,12 @@ stats.by.pct <- aggregate(cbind(arstmade,pistol) ~ pct, data=dfrm, sum)
 ## Count of obs in each pct:
 freq <- as.matrix(table(dfrm$pct)) 
 stats.by.pct <- cbind(stats.by.pct, freq)
-
-
+stats.by.pct$arrestrate <- 100*with(stats.by.pct, arstmade / freq)
 
 ## Normally I use fortify(precinctmap,region="id") but I got a weird error message when I did that, and the whole process worked when I took it out. Should look into that at some point.
 precinctmap@data$id <- rownames(precinctmap@data)
 precinctmap.points <- fortify(precinctmap)
 precinctmap.df <- join(precinctmap.points,precinctmap@data,by="id")
-
 
 precinctmap.df <- merge(precinctmap.df,stats.by.pct, by.x="Precinct", by.y="pct", all.x=T, a..ly=F)
 
@@ -60,13 +58,6 @@ stops$arrest.f.rev <- factor(stops$arstmade,levels = rev(levels(factor(stops$ars
 stops$black <- stops$race=="Black"
 
 stops$weapon <- rowSums(stops[,c("contrabn","pistol","riflshot","asltweap","knifcuti","machgun","othrweap")]) != 0
-
-
-## Summary stats:
-tapply(stops$frisked, stops$race, mean)
-tapply(stops$frisked, stops$black, mean)
-table(stops$frisked,stops$black)
-arrest.race.tbl <- table(stops$arstmade,stops$race)
 
 ## Mapping/exploration
 ## I read that it's faster if we don't map the shapefile, just the points. Gives you a decent sense of what the dfrm look like. However, I'm commenting this out now as I move away from exploration and more toward making the actual maps.
@@ -160,8 +151,29 @@ pctmap_density
 ggsave("output/heatmap.pdf")
 ggsave("output/heatmap.png")
 
-pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,fill=arstmade)) + geom_polygon(aes(group=group)) +
-    scale_fill_gradient(low="grey",high="red")
-pctmapplot + geom_text(data=cnames, aes(long, lat, label = Precinct), size=2)
-ggsave("output/choropleth1.pdf")
-ggsave("output/choropleth1.png")
+## Choropleth using precincts:
+pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,group=group,fill=arstmade)) +
+    geom_polygon() +
+    scale_fill_gradient(low="white",high="red",guide=guide_legend("Arrests")) +
+    geom_path(size=0.5)
+pctmapplot + theme.opts + theme(legend.title=element_text())
+ggsave("output/choropleth_arrests.pdf")
+ggsave("output/choropleth_arrests.png")
+
+pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,group=group)) +
+    geom_polygon(aes(group=group, fill=freq)) +
+    scale_fill_gradient(low="white",high="red",guide=guide_legend("Stops")) +
+    geom_path(size=0.5)
+pctmapplot + theme.opts + theme(legend.title=element_text())
+ggsave("output/choropleth_stops.pdf")
+ggsave("output/choropleth_stops.png")
+
+
+pctmapplot <- ggplot(precinctmap.df,aes(x=long,y=lat,group=group)) +
+    geom_polygon(aes(group=group, fill=arrestrate)) +
+    scale_fill_gradient(low="white",high="red",guide=guide_legend("Arrest / Stops")) +
+    geom_path(size=0.5)
+pctmapplot + theme.opts + theme(legend.title=element_text())
+ggsave("output/choropleth_arrestrate.pdf")
+ggsave("output/choropleth_arrestrate.png")
+
