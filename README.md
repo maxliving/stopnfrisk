@@ -5,4 +5,5 @@ A project mapping NYC Stop & Frisk data. The main file is stop_frisk_maps.R, whi
 
 I had originally planned to look at some more variables in the dataset (it is quite rich), and possibly other years (available from the NYPD website). I also would like to make an interactive map at some point, but a lot of the impetus is gone now that NYC has discontinued stop and frisk.
 
+All stops (green dots are arrests; red dots are stops that did not result in arrests):
 ![arrestmap](https://raw.github.com/maxliving/stopnfrisk/master/output/arrests.png)
